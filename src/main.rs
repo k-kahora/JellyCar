@@ -16,8 +16,8 @@ fn main() {
 
 fn setup_system(mut commands: Commands) {
     let shape = shapes::RegularPolygon {
-        sides: 6,
-        feature: shapes::RegularPolygonFeature::Radius(200.0),
+        sides: 30,
+        feature: shapes::RegularPolygonFeature::Radius(400.0),
         ..shapes::RegularPolygon::default()
     };
 
