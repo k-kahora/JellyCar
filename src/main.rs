@@ -14,7 +14,7 @@ fn main() {
 #[derive(Component)]
 struct PointGroup {
     
-    pub points: [Vec2;5],
+    pub points: [Vec2;8],
 
 }
 
@@ -29,11 +29,9 @@ fn spawn_point
 	for group in point_group_query.iter() {
 	    for point in group.points {
 		let circle = shapes::Circle {
-		    radius: 10.,
+		    radius: 2.,
 		    center: point.clone(),
 		};
-		println!("Hree");
-
 		commands.spawn(
 		    (
 			ShapeBundle {
@@ -69,12 +67,16 @@ fn setup_system(mut commands: Commands) {
     let path = path_builder.build();
 
     commands.spawn(PointGroup {
+	// These are the points for the car 
 	points: [
-	    Vec2::new(10.,30.),
-	    Vec2::new(30.,30.),
-	    Vec2::new(30.,30.),
-	    Vec2::new(200.,30.),
-	    Vec2::new(0.,30.),
+	    Vec2::new(0.,40.),
+	    Vec2::new(25.,40.),
+	    Vec2::new(75.,40.),
+	    Vec2::new(100.,40.),
+	    Vec2::new(100.,60.),
+	    Vec2::new(80., 100.),
+	    Vec2::new(20., 100.),
+	    Vec2::new(0.,60.),
 	]
     });
     commands.spawn(Camera2dBundle::default());
