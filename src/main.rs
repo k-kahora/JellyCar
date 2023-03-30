@@ -18,13 +18,30 @@ struct PointGroup {
 
 }
 
-fn spawn_point
+
+
+fn spawn_points
     (
 	mut commands: Commands,
 	point_group_query: Query<&PointGroup>,
 
     ) {
-	println!("{:?}", point_group_query);
+
+	commands.spawn(PointGroup {
+	    // These are the points for the car 
+	    points: [
+		Vec2::new(0.,40.),
+		Vec2::new(25.,40.),
+		Vec2::new(75.,40.),
+		Vec2::new(100.,40.),
+		Vec2::new(100.,60.),
+		Vec2::new(80., 100.),
+		Vec2::new(20., 100.),
+		Vec2::new(0.,60.),
+	    ]
+	});
+
+	println!("{:?} here", point_group_query);
 
 	for group in point_group_query.iter() {
 	    for point in group.points {
@@ -38,7 +55,7 @@ fn spawn_point
 			    path: GeometryBuilder::build_as(&circle),
 			    ..default()
 			},
-			Fill::color(Color::CYAN),
+			Fill::color(Color::WHITE),
 
 		    )
 
@@ -66,19 +83,6 @@ fn setup_system(mut commands: Commands) {
     path_builder.close();
     let path = path_builder.build();
 
-    commands.spawn(PointGroup {
-	// These are the points for the car 
-	points: [
-	    Vec2::new(0.,40.),
-	    Vec2::new(25.,40.),
-	    Vec2::new(75.,40.),
-	    Vec2::new(100.,40.),
-	    Vec2::new(100.,60.),
-	    Vec2::new(80., 100.),
-	    Vec2::new(20., 100.),
-	    Vec2::new(0.,60.),
-	]
-    });
     commands.spawn(Camera2dBundle::default());
 
     // let circle = shapes::Circle {
