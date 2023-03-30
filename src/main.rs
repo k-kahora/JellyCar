@@ -1,89 +1,125 @@
-use bevy::prelude::*;
+use bevy::{prelude::{*, shape::Circle}, transform::commands};
 use bevy_prototype_lyon::prelude::*;
+
+// For each point spawn a shape bundle, color, and stroke maybe
 
 fn main() {
     App::new()
         .insert_resource(Msaa::Sample4)
         .add_plugins(DefaultPlugins)
         .add_plugin(ShapePlugin)
-        .add_startup_system(setup_system)
-        .add_system(spawn_point)
+        .add_startup_system(startup_sequence)
         .run();
 }
 
 #[derive(Component)]
-struct PointGroup {
-    
-    pub points: [Vec2;8],
+struct Position(Vec2);
 
+#[derive(Component)]
+struct Velocity(Vec2);
+
+#[derive(Component)]
+struct ObjectName(String);
+
+#[derive(Component)]
+struct Mass(i32);
+
+// We have a object this object is a entity with the name Car
+// The car has a buck of points associated with it that has owners
+
+#[derive(Bundle)]
+struct MassPointGroup {
+    name: ObjectName,
 }
 
+#[derive(Bundle)]
+struct PointMassBundle {
 
+    // These are the properties of a point mass
+    mass: Mass,
+    position: Position,
+    velocity: Velocity,
+    shape: ShapeBundle,
+    owner: ObjectName,
+    color: Fill,
+}
 
-fn spawn_points
-    (
-	mut commands: Commands,
-	point_group_query: Query<&PointGroup>,
+impl MassPointGroup {
 
-    ) {
+    fn new_group(list_of_points: Vec<Vec2>) -> Vec<PointMassBundle> {
 
-	commands.spawn(PointGroup {
-	    // These are the points for the car 
-	    points: [
-		Vec2::new(0.,40.),
-		Vec2::new(25.,40.),
-		Vec2::new(75.,40.),
-		Vec2::new(100.,40.),
-		Vec2::new(100.,60.),
-		Vec2::new(80., 100.),
-		Vec2::new(20., 100.),
-		Vec2::new(0.,60.),
-	    ]
-	});
+	let mut point_masses = Vec::new();
 
-	println!("{:?} here", point_group_query);
+	for point in list_of_points {
 
-	for group in point_group_query.iter() {
-	    for point in group.points {
-		let circle = shapes::Circle {
-		    radius: 2.,
-		    center: point.clone(),
-		};
-		commands.spawn(
-		    (
-			ShapeBundle {
-			    path: GeometryBuilder::build_as(&circle),
+	    let circle = shapes::Circle {
+		radius: 32.,
+		center: point.clone()
+	    };
+
+	    point_masses.push(
+		PointMassBundle {
+		    mass: Mass(1),
+		    position: Position(point.clone()),
+		    velocity: Velocity(Vec2::new(0.,0.)),
+		    shape: ShapeBundle {
+			path: GeometryBuilder::build_as(&circle),
 			    ..default()
-			},
-			Fill::color(Color::WHITE),
-
-		    )
-
-		);
-	    }
+		    },
+		    // in the future get the name from MassPointgroup
+		    owner: ObjectName("Square".to_string()),
+		    color: Fill::color(Color::RED),
+		} 	
+	    )
+	    
 	}
 
+	point_masses
 
+	// for point in list_of_points.iter() {
+	//     print!("{}", point);
+	    
+	// }
+    }
 }
 
-fn setup_system(mut commands: Commands) {
-    
-    let mut path_builder = PathBuilder::new();
-    path_builder.move_to(Vec2::new(0., 0.));
-    path_builder.cubic_bezier_to(
-        Vec2::new(70., 70.),
-        Vec2::new(175., -35.),
-        Vec2::new(0., -140.),
-    );
-    path_builder.cubic_bezier_to(
-        Vec2::new(-175., -35.),
-        Vec2::new(-70., 70.),
-        Vec2::new(0., 0.),
-    );
-    path_builder.close();
-    let path = path_builder.build();
-
+fn startup_sequence (
+   mut commands: Commands 
+)
+{
     commands.spawn(Camera2dBundle::default());
+    
+    let points = MassPointGroup::new_group(
+	vec![Vec2::new(4.,321.),
+	     Vec2::new(21.,321.),
+	     Vec2::new(413.,321.),
+	     Vec2::new(7.,321.)]
+    );
+
+    for point in points {
+	commands.spawn(point);
+    }
+
+    // 	    let circle = shapes::Circle {
+    // 		radius: 432.,
+    // 		center: Vec2::new(32., 0.),
+    // 	    };
+    // commands.spawn((
+
+    // 		    ShapeBundle {
+    // 			path: GeometryBuilder::build_as(&circle),
+    // 			    ..default()
+    // 		    },
+    // 		    // in the future get the name from MassPointgroup
+    // 		    Fill::color(Color::RED),
+			
+    // 	));
+}
+
+
+// each point is a 
+
+// An arry or shape builders is the only way to do this
 
     // let circle = shapes::Circle {
     // 	radius: 32.,
@@ -110,4 +146,4 @@ fn setup_system(mut commands: Commands) {
     //     Stroke::new(Color::BLACK, 10.0),
     //     Fill::color(Color::RED),
     // ));
-}
+
