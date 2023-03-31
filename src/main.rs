@@ -44,9 +44,13 @@ struct PointMassBundle {
     color: Fill,
 }
 
+struct PathBundle {
+    
+}
+
 impl MassPointGroup {
 
-    fn new_group(list_of_points: Vec<Vec2>) -> Vec<PointMassBundle> {
+    fn new_group(list_of_points: &Vec<Vec2>) -> Vec<PointMassBundle> {
 
 	let mut point_masses = Vec::new();
 
@@ -75,12 +79,33 @@ impl MassPointGroup {
 	}
 
 	point_masses
-
-	// for point in list_of_points.iter() {
-	//     print!("{}", point);
-	    
-	// }
     }
+
+    fn draw_paths(list_of_points: &Vec<Vec2>) -> ShapeBundle {
+
+	let mut path_builder = PathBuilder::new();
+	path_builder.move_to(list_of_points[0]);
+
+	for point in list_of_points {
+	   path_builder.line_to(*point);
+	}
+
+
+	path_builder.close();
+	let path = path_builder.build();
+
+	ShapeBundle {
+	    path,
+	    transform: Transform::from_xyz(0., 56., 0.),
+	    ..default()
+	}
+
+	
+
+	
+
+    }
+
 }
 
 fn startup_sequence (
@@ -88,17 +113,24 @@ fn startup_sequence (
 )
 {
     commands.spawn(Camera2dBundle::default());
+
+    let car = 
+	vec![Vec2::new(4.,21.),
+	     Vec2::new(21.,1.),
+	     Vec2::new(413.,42.),
+	     Vec2::new(7.,85.)];
     
-    let points = MassPointGroup::new_group(
-	vec![Vec2::new(4.,321.),
-	     Vec2::new(21.,321.),
-	     Vec2::new(413.,321.),
-	     Vec2::new(7.,321.)]
-    );
+    let points = MassPointGroup::new_group(&car);
+    let paths = MassPointGroup::draw_paths(&car);
 
     for point in points {
 	commands.spawn(point);
     }
+
+    commands.spawn((paths,
+        Stroke::new(Color::BLACK, 10.0),
+		    Fill::color(Color::RED),
+    ));
 
     // 	    let circle = shapes::Circle {
     // 		radius: 432.,
