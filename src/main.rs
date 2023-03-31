@@ -57,7 +57,7 @@ impl MassPointGroup {
 	for point in list_of_points {
 
 	    let circle = shapes::Circle {
-		radius: 32.,
+		radius: 6.,
 		center: point.clone()
 	    };
 
@@ -72,7 +72,7 @@ impl MassPointGroup {
 		    },
 		    // in the future get the name from MassPointgroup
 		    owner: ObjectName("Square".to_string()),
-		    color: Fill::color(Color::RED),
+		    color: Fill::color(Color::WHITE),
 		} 	
 	    )
 	    
@@ -96,7 +96,7 @@ impl MassPointGroup {
 
 	ShapeBundle {
 	    path,
-	    transform: Transform::from_xyz(0., 56., 0.),
+	    transform: Transform::from_xyz(0., 0., 4.),
 	    ..default()
 	}
 
@@ -115,10 +115,11 @@ fn startup_sequence (
     commands.spawn(Camera2dBundle::default());
 
     let car = 
-	vec![Vec2::new(4.,21.),
-	     Vec2::new(21.,1.),
-	     Vec2::new(413.,42.),
-	     Vec2::new(7.,85.)];
+	vec![Vec2::new(0.,0.),
+	     Vec2::new(200., 0.),
+	     Vec2::new(170., 60.),
+	     Vec2::new(30., 60.),
+	     Vec2::new(0.,0.)];
     
     let points = MassPointGroup::new_group(&car);
     let paths = MassPointGroup::draw_paths(&car);
@@ -128,8 +129,8 @@ fn startup_sequence (
     }
 
     commands.spawn((paths,
-        Stroke::new(Color::BLACK, 10.0),
-		    Fill::color(Color::RED),
+        Stroke::new(Color::WHITE, 1.0),
+		    // Fill::color(Color::WHITE),
     ));
 
     // 	    let circle = shapes::Circle {
@@ -155,7 +156,7 @@ fn startup_sequence (
 
     // let circle = shapes::Circle {
     // 	radius: 32.,
-    // 	center: Vec2::new(200., 21.),
+    // 	center: Ve2::new(200., 21.),
     // };
 
     // commands.spawn(
