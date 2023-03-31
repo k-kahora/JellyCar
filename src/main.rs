@@ -117,8 +117,12 @@ fn startup_sequence (
     let car = 
 	vec![Vec2::new(0.,0.),
 	     Vec2::new(200., 0.),
-	     Vec2::new(170., 60.),
-	     Vec2::new(30., 60.),
+	     Vec2::new(200., 30.),
+	     Vec2::new(170., 40.),
+	     Vec2::new(140., 90.),
+	     Vec2::new(60., 90.),
+	     Vec2::new(30., 45.),
+	     Vec2::new(0., 40.),
 	     Vec2::new(0.,0.)];
     
     let points = MassPointGroup::new_group(&car);
