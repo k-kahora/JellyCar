@@ -1,4 +1,7 @@
-use bevy::{prelude::{*, shape::Circle}, transform::commands};
+use bevy::{
+    prelude::{shape::Circle, *},
+    transform::commands,
+};
 use bevy_prototype_lyon::prelude::*;
 
 // For each point spawn a shape bundle, color, and stroke maybe
@@ -10,6 +13,7 @@ fn main() {
         .add_plugin(ShapePlugin)
         .add_startup_system(startup_sequence)
         .add_system(point_movement)
+        .add_system(line_movement)
         .run();
 }
 
@@ -33,11 +37,13 @@ struct Mass(i32);
 #[derive(Bundle)]
 struct MassPointGroup {
     name: ObjectName,
+    velocity: Velocity
 }
+#[derive(Component)]
+struct Group;
 
 #[derive(Bundle)]
 struct PointMassBundle {
-
     // These are the properties of a point mass
     mass: Mass,
     position: Position,
@@ -50,106 +56,129 @@ struct PointMassBundle {
 #[derive(Component)]
 struct Point;
 
-
 impl MassPointGroup {
-
     fn new_group(list_of_points: &Vec<Vec2>) -> Vec<PointMassBundle> {
+        let mut point_masses = Vec::new();
 
-	let mut point_masses = Vec::new();
+        for point in list_of_points {
+            let circle = shapes::Circle {
+                radius: 6.,
+                center: point.clone(),
+            };
 
-	for point in list_of_points {
+            point_masses.push(PointMassBundle {
+                mass: Mass(1),
+                position: Position(point.clone()),
+                velocity: Velocity(Vec2::new(0., -1.)),
+                shape: ShapeBundle {
+                    path: GeometryBuilder::build_as(&circle),
+                    ..default()
+                },
+                // in the future get the name from MassPointgroup
+                owner: ObjectName("Square".to_string()),
+                color: Fill::color(Color::WHITE),
+            })
+        }
 
-	    let circle = shapes::Circle {
-		radius: 6.,
-		center: point.clone()
-	    };
-
-	    point_masses.push(
-		PointMassBundle {
-		    mass: Mass(1),
-		    position: Position(point.clone()),
-		    velocity: Velocity(Vec2::new(0., -1.)),
-		    shape: ShapeBundle {
-			path: GeometryBuilder::build_as(&circle),
-			    ..default()
-		    },
-		    // in the future get the name from MassPointgroup
-		    owner: ObjectName("Square".to_string()),
-		    color: Fill::color(Color::WHITE),
-		} 	
-	    )
-	    
-	}
-
-	point_masses
+        point_masses
     }
 
     fn draw_paths(list_of_points: &Vec<Vec2>) -> ShapeBundle {
+        let mut path_builder = PathBuilder::new();
+        path_builder.move_to(list_of_points[0]);
 
-	let mut path_builder = PathBuilder::new();
-	path_builder.move_to(list_of_points[0]);
+        for point in list_of_points {
+            path_builder.line_to(*point);
+        }
 
-	for point in list_of_points {
-	   path_builder.line_to(*point);
-	}
+        path_builder.close();
+        let path = path_builder.build();
 
-
-	path_builder.close();
-	let path = path_builder.build();
-
-	ShapeBundle {
-	    path,
-	    transform: Transform::from_xyz(0., 0., 4.),
-	    ..default()
-	}
-
+        ShapeBundle {
+            path,
+            transform: Transform::from_xyz(0., 0., 4.),
+            ..default()
+        }
     }
-
 }
 
 // You nee to spawn the baths points as one entity so this point movement operats
 // On the shape as a single entity you can translate the bath with it as well
 // Make a bundle that has the point mass as well as the paths and translate the paths
-fn point_movement(
-    mut point_query: Query<(&mut Transform, &Point, &Velocity)>,
+
+// TODO System that redraws the path every frame baste on the point groups position updates
+
+// Do a databrse join with all points associated with the same object then update the paths based on thos query points
+
+// I want all entitys that are points so I can make a new path and I want to get the entity that is a path
+// I want to be able to read the position of points and then I want to be able to mutate the shape bundle of the lines
+fn line_movement(
+    mut line_query: Query<(&mut Transform, &Velocity, &mut Path), With<Group>>,
+    mut point_query: Query<&mut Position, With<Point>>,
     time: Res<Time>,
 ) {
-    
-    for (mut transform, point, velocity) in point_query.iter_mut() {
-	
-	let direction = Vec3::new(velocity.0.x, velocity.0.y, 0.);
-	transform.translation += direction * POINT_SPEED * time.delta_seconds();
+    let mut path_builder = PathBuilder::new();
+
+   // Iterate over each point and make the new path 
+
+    let points: Vec<&Position> = point_query.iter().collect();
+    path_builder.move_to(points[0].0);
+
+    for point in points {
+
+	path_builder.line_to(point.0);
 
     }
+    path_builder.close();
 
+    let path = path_builder.build();
+
+    println!("{:?}", line_query);
+
+    let (mut transform, velocity, mut path_buffer) = line_query.get_single_mut().unwrap();
+
+    let direction = Vec3::new(velocity.0.x, velocity.0.y, 0.);
+    transform.translation += direction * POINT_SPEED * time.delta_seconds();
+    *path_buffer = path;
+    // Get the points and update the Group attributes 
 }
-fn startup_sequence (
-   mut commands: Commands 
-)
-{
+
+fn point_movement(mut point_query: Query<(&mut Transform, &Point, &Velocity)>, time: Res<Time>) {
+    for (mut transform, point, velocity) in point_query.iter_mut() {
+        let direction = Vec3::new(velocity.0.x, velocity.0.y, 0.);
+        transform.translation += direction * POINT_SPEED * time.delta_seconds();
+    }
+}
+fn startup_sequence(mut commands: Commands) {
     commands.spawn(Camera2dBundle::default());
 
-    let car = 
-	vec![Vec2::new(0.,0.),
-	     Vec2::new(200., 0.),
-	     Vec2::new(200., 30.),
-	     Vec2::new(170., 40.),
-	     Vec2::new(140., 90.),
-	     Vec2::new(60., 90.),
-	     Vec2::new(30., 45.),
-	     Vec2::new(0., 40.),
-	     Vec2::new(0.,0.)];
-    
+    let car = vec![
+        Vec2::new(0., 0.),
+        Vec2::new(200., 0.),
+        Vec2::new(200., 30.),
+        Vec2::new(170., 40.),
+        Vec2::new(140., 90.),
+        Vec2::new(60., 90.),
+        Vec2::new(30., 45.),
+        Vec2::new(0., 40.),
+        Vec2::new(0., 0.),
+    ];
+
     let points = MassPointGroup::new_group(&car);
     let paths = MassPointGroup::draw_paths(&car);
 
     for point in points {
-	commands.spawn((point, Point));
+        commands.spawn((point, Point));
     }
 
-    commands.spawn((paths,
+    commands.spawn((
+        paths,
         Stroke::new(Color::WHITE, 1.0),
-		    // Fill::color(Color::WHITE),
+        MassPointGroup {
+            name: ObjectName("car".to_string()),
+            velocity: Velocity(Vec2::new(0., -1.)),
+        },
+	Group
     ));
 
     // 	    let circle = shapes::Circle {
@@ -164,38 +193,36 @@ fn startup_sequence (
     // 		    },
     // 		    // in the future get the name from MassPointgroup
     // 		    Fill::color(Color::RED),
-			
+
     // 	));
 }
 
-
-// each point is a 
+// each point is a
 
 // An arry or shape builders is the only way to do this
 
-    // let circle = shapes::Circle {
-    // 	radius: 32.,
-    // 	center: Ve2::new(200., 21.),
-    // };
+// let circle = shapes::Circle {
+// 	radius: 32.,
+// 	center: Ve2::new(200., 21.),
+// };
 
-    // commands.spawn(
-    // 	(
-    // 	    ShapeBundle {
-    // 		path: GeometryBuilder::build_as(&circle),
-    // 		..default()
-    // 	    },
-    // 	    Fill::color(Color::CYAN),
+// commands.spawn(
+// 	(
+// 	    ShapeBundle {
+// 		path: GeometryBuilder::build_as(&circle),
+// 		..default()
+// 	    },
+// 	    Fill::color(Color::CYAN),
 
-    // 	)
+// 	)
 
-    // );
-    // commands.spawn((
-    //     ShapeBundle {
-    //         path,
-    //         transform: Transform::from_xyz(0., 75., 0.),
-    //         ..default()
-    //     },
-    //     Stroke::new(Color::BLACK, 10.0),
-    //     Fill::color(Color::RED),
-    // ));
-
+// );
+// commands.spawn((
+//     ShapeBundle {
+//         path,
+//         transform: Transform::from_xyz(0., 75., 0.),
+//         ..default()
+//     },
+//     Stroke::new(Color::BLACK, 10.0),
+//     Fill::color(Color::RED),
+// ));
