@@ -1,0 +1,5 @@
+* TODO Link group of points with a path somehow (I an thinking like a key in databases)
+** Points are linked but only for one object
+* DONE link points together with lines
+* Gravity applied to all points
+

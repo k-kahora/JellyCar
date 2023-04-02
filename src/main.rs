@@ -74,7 +74,7 @@ impl MassPointGroup {
                 mass: Mass(1),
                 position: Position(point.clone()),
 // random::<f32>(),random::<f32>()
-                direction: Direction(Vec2::new(random::<f32>(),1.)),
+                direction: Direction(Vec2::new(random::<f32>(),-1.)),
                 shape: ShapeBundle {
                     path: GeometryBuilder::build_as(&circle),
 		    transform: Transform::from_xyz(point.clone().x, point.clone().y, 0.),
