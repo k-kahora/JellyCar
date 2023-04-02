@@ -1,7 +1,10 @@
+
 use bevy::{
     prelude::{shape::Circle, *},
     transform::commands,
 };
+
+use rand::prelude::*;
 use bevy_prototype_lyon::prelude::*;
 
 // For each point spawn a shape bundle, color, and stroke maybe
@@ -23,7 +26,7 @@ pub const POINT_SPEED: f32 = 200.0;
 struct Position(Vec2);
 
 #[derive(Component)]
-struct Velocity(Vec2);
+struct Direction(Vec2);
 
 #[derive(Component)]
 struct ObjectName(String);
@@ -37,7 +40,7 @@ struct Mass(i32);
 #[derive(Bundle)]
 struct MassPointGroup {
     name: ObjectName,
-    velocity: Velocity
+    direction: Direction
 }
 #[derive(Component)]
 struct Group;
@@ -47,7 +50,7 @@ struct PointMassBundle {
     // These are the properties of a point mass
     mass: Mass,
     position: Position,
-    velocity: Velocity,
+    direction: Direction,
     shape: ShapeBundle,
     owner: ObjectName,
     color: Fill,
@@ -69,7 +72,7 @@ impl MassPointGroup {
             point_masses.push(PointMassBundle {
                 mass: Mass(1),
                 position: Position(point.clone()),
-                velocity: Velocity(Vec2::new(0., -1.)),
+                direction: Direction(Vec2::new(random::<f32>(),random::<f32>())),
                 shape: ShapeBundle {
                     path: GeometryBuilder::build_as(&circle),
                     ..default()
@@ -112,57 +115,69 @@ impl MassPointGroup {
 
 // I want all entitys that are points so I can make a new path and I want to get the entity that is a path
 // I want to be able to read the position of points and then I want to be able to mutate the shape bundle of the lines
+
+
+
+
 fn line_movement(
-    mut line_query: Query<(&mut Transform, &Velocity, &mut Path), With<Group>>,
-    mut point_query: Query<&mut Position, With<Point>>,
-    time: Res<Time>,
-) {
-    let mut path_builder = PathBuilder::new();
-
-   // Iterate over each point and make the new path 
-
-    let points: Vec<&Position> = point_query.iter().collect();
-    path_builder.move_to(points[0].0);
-
-    for point in points {
-
-	path_builder.line_to(point.0);
-
-    }
-    path_builder.close();
-
-    let path = path_builder.build();
-
+    point_query: Query<&Transform, With<Point>>,
+    mut line_query: Query<&mut Path, With<Group>>,
+    time: Res<Time>
+)
+{
+    // println!("{:?}", point_query);
     println!("{:?}", line_query);
 
-    let (mut transform, velocity, mut path_buffer) = line_query.get_single_mut().unwrap();
+    let mut path_builder = PathBuilder::new();
+    let points  = point_query.iter().collect::<Vec<&Transform>>();
 
-    let direction = Vec3::new(velocity.0.x, velocity.0.y, 0.);
-    transform.translation += direction * POINT_SPEED * time.delta_seconds();
-    *path_buffer = path;
-    // Get the points and update the Group attributes 
+
+    path_builder.move_to(points[0].translation.truncate());
+    for point in points {
+	path_builder.line_to(point.translation.truncate());
+    }
+
+    path_builder.close();
+    let new_path = path_builder.build();
+
+    if let Ok(mut path ) = line_query.get_single_mut() {
+
+	path.0 = new_path.0
+	
+    }
+    
+    // path_builder.move_to();
+    
+
 }
 
-fn point_movement(mut point_query: Query<(&mut Transform, &Point, &Velocity)>, time: Res<Time>) {
+fn point_movement(mut point_query: Query<(&mut Transform, &Point, &Direction)>, time: Res<Time>) {
     for (mut transform, point, velocity) in point_query.iter_mut() {
         let direction = Vec3::new(velocity.0.x, velocity.0.y, 0.);
-        transform.translation += direction * POINT_SPEED * time.delta_seconds();
+        transform.translation += direction.normalize() * POINT_SPEED * time.delta_seconds();
     }
 }
 fn startup_sequence(mut commands: Commands) {
     commands.spawn(Camera2dBundle::default());
 
+
     let car = vec![
         Vec2::new(0., 0.),
         Vec2::new(200., 0.),
         Vec2::new(200., 30.),
-        Vec2::new(170., 40.),
-        Vec2::new(140., 90.),
-        Vec2::new(60., 90.),
-        Vec2::new(30., 45.),
-        Vec2::new(0., 40.),
         Vec2::new(0., 0.),
     ];
+    // let car = vec![
+    //     Vec2::new(0., 0.),
+    //     Vec2::new(200., 0.),
+    //     Vec2::new(200., 30.),
+    //     Vec2::new(170., 40.),
+    //     Vec2::new(140., 90.),
+    //     Vec2::new(60., 90.),
+    //     Vec2::new(30., 45.),
+    //     Vec2::new(0., 40.),
+    //     Vec2::new(0., 0.),
+    // ];
 
     let points = MassPointGroup::new_group(&car);
     let paths = MassPointGroup::draw_paths(&car);
@@ -176,7 +191,7 @@ fn startup_sequence(mut commands: Commands) {
         Stroke::new(Color::WHITE, 1.0),
         MassPointGroup {
             name: ObjectName("car".to_string()),
-            velocity: Velocity(Vec2::new(0., -1.)),
+            direction: Direction(Vec2::new(0., -1.)),
         },
 	Group
     ));
