@@ -66,15 +66,18 @@ impl MassPointGroup {
         for point in list_of_points {
             let circle = shapes::Circle {
                 radius: 6.,
-                center: point.clone(),
+		..default()
+                // center: point.clone(),
             };
 
             point_masses.push(PointMassBundle {
                 mass: Mass(1),
                 position: Position(point.clone()),
-                direction: Direction(Vec2::new(random::<f32>(),random::<f32>())),
+// random::<f32>(),random::<f32>()
+                direction: Direction(Vec2::new(random::<f32>(),1.)),
                 shape: ShapeBundle {
                     path: GeometryBuilder::build_as(&circle),
+		    transform: Transform::from_xyz(point.clone().x, point.clone().y, 0.),
                     ..default()
                 },
                 // in the future get the name from MassPointgroup
@@ -126,23 +129,31 @@ fn line_movement(
 )
 {
     // println!("{:?}", point_query);
-    println!("{:?}", line_query);
 
     let mut path_builder = PathBuilder::new();
     let points  = point_query.iter().collect::<Vec<&Transform>>();
 
-
-    path_builder.move_to(points[0].translation.truncate());
-    for point in points {
+    // path_builder.move_to(points[0].translation.truncate());
+    for &point in points {
 	path_builder.line_to(point.translation.truncate());
+	// println!("{:?}", point.translation);
     }
 
     path_builder.close();
-    let new_path = path_builder.build();
+
+    let shape = shapes::RegularPolygon {
+        sides: 6,
+        feature: shapes::RegularPolygonFeature::Radius(200.0),
+        ..shapes::RegularPolygon::default()
+    };
+
+    // let new_path = path_builder.build();
+    // println!("{:?}", new_path.0);
 
     if let Ok(mut path ) = line_query.get_single_mut() {
 
-	path.0 = new_path.0
+            // *path = GeometryBuilder::build_as(&shape);
+	*path = path_builder.build();
 	
     }
     
@@ -155,29 +166,31 @@ fn point_movement(mut point_query: Query<(&mut Transform, &Point, &Direction)>, 
     for (mut transform, point, velocity) in point_query.iter_mut() {
         let direction = Vec3::new(velocity.0.x, velocity.0.y, 0.);
         transform.translation += direction.normalize() * POINT_SPEED * time.delta_seconds();
+	println!("{}", transform.translation)
     }
 }
+
 fn startup_sequence(mut commands: Commands) {
     commands.spawn(Camera2dBundle::default());
 
 
-    let car = vec![
-        Vec2::new(0., 0.),
-        Vec2::new(200., 0.),
-        Vec2::new(200., 30.),
-        Vec2::new(0., 0.),
-    ];
     // let car = vec![
     //     Vec2::new(0., 0.),
     //     Vec2::new(200., 0.),
     //     Vec2::new(200., 30.),
-    //     Vec2::new(170., 40.),
-    //     Vec2::new(140., 90.),
-    //     Vec2::new(60., 90.),
-    //     Vec2::new(30., 45.),
-    //     Vec2::new(0., 40.),
-    //     Vec2::new(0., 0.),
+    //     // Vec2::new(0., 0.),
     // ];
+    let car = vec![
+        Vec2::new(0., 0.),
+        Vec2::new(200., 0.),
+        Vec2::new(200., 30.),
+        Vec2::new(170., 40.),
+        Vec2::new(140., 90.),
+        Vec2::new(60., 90.),
+        Vec2::new(30., 45.),
+        Vec2::new(0., 40.),
+        Vec2::new(0., 0.),
+    ];
 
     let points = MassPointGroup::new_group(&car);
     let paths = MassPointGroup::draw_paths(&car);
@@ -188,7 +201,7 @@ fn startup_sequence(mut commands: Commands) {
 
     commands.spawn((
         paths,
-        Stroke::new(Color::WHITE, 1.0),
+        Stroke::new(Color::WHITE, 4.0),
         MassPointGroup {
             name: ObjectName("car".to_string()),
             direction: Direction(Vec2::new(0., -1.)),
