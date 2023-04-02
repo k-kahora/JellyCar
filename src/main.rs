@@ -64,10 +64,10 @@ impl MassPointGroup {
         let mut point_masses = Vec::new();
 
         for point in list_of_points {
+	    // giving the point a center makes the transform.translation glitchy
             let circle = shapes::Circle {
                 radius: 6.,
 		..default()
-                // center: point.clone(),
             };
 
             point_masses.push(PointMassBundle {
@@ -108,19 +108,6 @@ impl MassPointGroup {
     }
 }
 
-// You nee to spawn the baths points as one entity so this point movement operats
-// On the shape as a single entity you can translate the bath with it as well
-// Make a bundle that has the point mass as well as the paths and translate the paths
-
-// TODO System that redraws the path every frame baste on the point groups position updates
-
-// Do a databrse join with all points associated with the same object then update the paths based on thos query points
-
-// I want all entitys that are points so I can make a new path and I want to get the entity that is a path
-// I want to be able to read the position of points and then I want to be able to mutate the shape bundle of the lines
-
-
-
 
 fn line_movement(
     point_query: Query<&Transform, With<Point>>,
@@ -128,38 +115,15 @@ fn line_movement(
     time: Res<Time>
 )
 {
-    // println!("{:?}", point_query);
-
     let mut path_builder = PathBuilder::new();
     let points  = point_query.iter().collect::<Vec<&Transform>>();
-
-    // path_builder.move_to(points[0].translation.truncate());
     for &point in points {
 	path_builder.line_to(point.translation.truncate());
-	// println!("{:?}", point.translation);
     }
-
     path_builder.close();
-
-    let shape = shapes::RegularPolygon {
-        sides: 6,
-        feature: shapes::RegularPolygonFeature::Radius(200.0),
-        ..shapes::RegularPolygon::default()
-    };
-
-    // let new_path = path_builder.build();
-    // println!("{:?}", new_path.0);
-
     if let Ok(mut path ) = line_query.get_single_mut() {
-
-            // *path = GeometryBuilder::build_as(&shape);
 	*path = path_builder.build();
-	
     }
-    
-    // path_builder.move_to();
-    
-
 }
 
 fn point_movement(mut point_query: Query<(&mut Transform, &Point, &Direction)>, time: Res<Time>) {
@@ -170,6 +134,7 @@ fn point_movement(mut point_query: Query<(&mut Transform, &Point, &Direction)>, 
     }
 }
 
+// Give MassPointgroup a list of 2d vectors for an object
 fn startup_sequence(mut commands: Commands) {
     commands.spawn(Camera2dBundle::default());
 
