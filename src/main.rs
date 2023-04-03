@@ -21,9 +21,13 @@ fn main() {
 }
 
 pub const POINT_SPEED: f32 = 200.0;
+pub const GRAVITY: f32 = 9.8;
 
 #[derive(Component)]
 struct Position(Vec2);
+
+#[derive(Component)]
+struct Speed(f32);
 
 #[derive(Component)]
 struct Direction(Vec2);
@@ -52,6 +56,7 @@ struct PointMassBundle {
     position: Position,
     direction: Direction,
     shape: ShapeBundle,
+    speed: Speed,
     owner: ObjectName,
     color: Fill,
 }
@@ -72,9 +77,10 @@ impl MassPointGroup {
 
             point_masses.push(PointMassBundle {
                 mass: Mass(1),
+                speed: Speed(0.),
                 position: Position(point.clone()),
 // random::<f32>(),random::<f32>()
-                direction: Direction(Vec2::new(random::<f32>(),-1.)),
+                direction: Direction(Vec2::new(0.,-1.)),
                 shape: ShapeBundle {
                     path: GeometryBuilder::build_as(&circle),
 		    transform: Transform::from_xyz(point.clone().x, point.clone().y, 0.),
@@ -126,10 +132,12 @@ fn line_movement(
     }
 }
 
-fn point_movement(mut point_query: Query<(&mut Transform, &Point, &Direction)>, time: Res<Time>) {
-    for (mut transform, point, velocity) in point_query.iter_mut() {
-        let direction = Vec3::new(velocity.0.x, velocity.0.y, 0.);
-        transform.translation += direction.normalize() * POINT_SPEED * time.delta_seconds();
+fn point_movement(mut point_query: Query<(&mut Transform, &Point, &Direction, &mut Speed)>, time: Res<Time>) {
+    
+    for (mut transform, point, direction, mut speed) in point_query.iter_mut() {
+        let direction3 = Vec3::new(direction.0.x, direction.0.y, 0.);
+	speed.0 += GRAVITY;
+        transform.translation += direction3.normalize() * speed.0 * time.delta_seconds();
 	println!("{}", transform.translation)
     }
 }
