@@ -181,49 +181,4 @@ fn startup_sequence(mut commands: Commands) {
         },
 	Group
     ));
-
-    // 	    let circle = shapes::Circle {
-    // 		radius: 432.,
-    // 		center: Vec2::new(32., 0.),
-    // 	    };
-    // commands.spawn((
-
-    // 		    ShapeBundle {
-    // 			path: GeometryBuilder::build_as(&circle),
-    // 			    ..default()
-    // 		    },
-    // 		    // in the future get the name from MassPointgroup
-    // 		    Fill::color(Color::RED),
-
-    // 	));
 }
-
-// each point is a
-
-// An arry or shape builders is the only way to do this
-
-// let circle = shapes::Circle {
-// 	radius: 32.,
-// 	center: Ve2::new(200., 21.),
-// };
-
-// commands.spawn(
-// 	(
-// 	    ShapeBundle {
-// 		path: GeometryBuilder::build_as(&circle),
-// 		..default()
-// 	    },
-// 	    Fill::color(Color::CYAN),
-
-// 	)
-
-// );
-// commands.spawn((
-//     ShapeBundle {
-//         path,
-//         transform: Transform::from_xyz(0., 75., 0.),
-//         ..default()
-//     },
-//     Stroke::new(Color::BLACK, 10.0),
-//     Fill::color(Color::RED),
-// ));
