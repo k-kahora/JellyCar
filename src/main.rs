@@ -1,7 +1,7 @@
 
 use bevy::{
     prelude::{shape::Circle, *},
-    transform::commands,
+    transform::{commands, self},
 };
 
 use rand::prelude::*;
@@ -21,7 +21,7 @@ fn main() {
 }
 
 pub const POINT_SPEED: f32 = 200.0;
-pub const GRAVITY: f32 = 9.8;
+pub const GRAVITY: f32 = 9.;
 
 #[derive(Component)]
 struct Position(Vec2);
@@ -115,20 +115,23 @@ impl MassPointGroup {
     }
 }
 
-
+// The line is the parent and the points are the children
+// Query children in the line query
 fn line_movement(
     point_query: Query<&Transform, With<Point>>,
-    mut line_query: Query<&mut Path, With<Group>>,
+    mut line_query: Query<(&mut Path, &Children), With<Group>>,
     time: Res<Time>
 )
 {
-    let mut path_builder = PathBuilder::new();
-    let points  = point_query.iter().collect::<Vec<&Transform>>();
-    for &point in points {
-	path_builder.line_to(point.translation.truncate());
-    }
-    path_builder.close();
-    if let Ok(mut path ) = line_query.get_single_mut() {
+    for (mut path, children) in line_query.iter_mut() {
+	let mut path_builder = PathBuilder::new();
+	for &child  in children.iter() {
+	    let point = point_query.get(child);
+	    if let Ok(transform) = point {
+		path_builder.line_to(transform.translation.truncate());
+	    }
+	}
+	path_builder.close();
 	*path = path_builder.build();
     }
 }
@@ -145,7 +148,6 @@ fn point_movement(mut point_query: Query<(&mut Transform, &Point, &Direction, &m
 // Give MassPointgroup a list of 2d vectors for an object
 fn startup_sequence(mut commands: Commands) {
     commands.spawn(Camera2dBundle::default());
-
 
     // let car = vec![
     //     Vec2::new(0., 0.),
@@ -168,9 +170,6 @@ fn startup_sequence(mut commands: Commands) {
     let points = MassPointGroup::new_group(&car);
     let paths = MassPointGroup::draw_paths(&car);
 
-    for point in points {
-        commands.spawn((point, Point));
-    }
 
     commands.spawn((
         paths,
@@ -180,5 +179,9 @@ fn startup_sequence(mut commands: Commands) {
             direction: Direction(Vec2::new(0., -1.)),
         },
 	Group
-    ));
+    )).with_children(|parent| {
+		     for point in points {
+			 parent.spawn((point, Point));
+		     }
+    });
 }
