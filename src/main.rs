@@ -149,12 +149,14 @@ fn point_movement(mut point_query: Query<(&mut Transform, &Point, &Direction, &m
 fn startup_sequence(mut commands: Commands) {
     commands.spawn(Camera2dBundle::default());
 
-    // let car = vec![
-    //     Vec2::new(0., 0.),
-    //     Vec2::new(200., 0.),
-    //     Vec2::new(200., 30.),
-    //     // Vec2::new(0., 0.),
-    // ];
+    let square = vec![
+        Vec2::new(-200., 0.),
+        Vec2::new(-100., 0.),
+        Vec2::new(-100., 100.),
+        Vec2::new(-200., 200.),
+        Vec2::new(-200., 0.),
+        // Vec2::new(0., 0.),
+    ];
     let car = vec![
         Vec2::new(0., 0.),
         Vec2::new(200., 0.),
@@ -170,6 +172,8 @@ fn startup_sequence(mut commands: Commands) {
     let points = MassPointGroup::new_group(&car);
     let paths = MassPointGroup::draw_paths(&car);
 
+    let square_points = MassPointGroup::new_group(&square);
+    let square_lines  = MassPointGroup::draw_paths(&square);
 
     commands.spawn((
         paths,
@@ -181,6 +185,20 @@ fn startup_sequence(mut commands: Commands) {
 	Group
     )).with_children(|parent| {
 		     for point in points {
+			 parent.spawn((point, Point));
+		     }
+    });
+
+    commands.spawn((
+        square_lines,
+        Stroke::new(Color::WHITE, 4.0),
+        MassPointGroup {
+            name: ObjectName("car".to_string()),
+            direction: Direction(Vec2::new(0., -1.)),
+        },
+	Group
+    )).with_children(|parent| {
+		     for point in square_points {
 			 parent.spawn((point, Point));
 		     }
     });
