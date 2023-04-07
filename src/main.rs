@@ -157,6 +157,30 @@ fn minimum_bounding_box(
 
 }
 
+
+// Bounding Box needs to be calculated every frame for all non moving entitys
+
+fn update_bounding_box(
+    point_query: Query<&Transform, With<Point>>,
+    mut group_query: Query<(&mut Path, &mut BoundingBox, &Children), With<Group>>,
+    time: Res<Time>
+)
+{
+    // Bounding Box Sudo Code
+    for (mut path, mut bounding_box, children) in group_query.iter_mut() {
+	let mut path_builder = PathBuilder::new();
+	let mut new_points: Vec<Vec2> = Vec::new();
+	for &child  in children.iter() {
+	    let point = point_query.get(child);
+	    if let Ok(transform) = point {
+		path_builder.line_to(transform.translation.truncate());
+	    }
+	}
+	path_builder.close();
+	*path = path_builder.build();
+    }
+}
+
 fn line_movement(
     point_query: Query<&Transform, With<Point>>,
     mut line_query: Query<(&mut Path, &Children), With<Group>>,
