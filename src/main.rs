@@ -1,4 +1,3 @@
-
 use bevy::{
     prelude::{shape::Circle, *},
     transform::{commands, self},
@@ -141,7 +140,6 @@ fn point_movement(mut point_query: Query<(&mut Transform, &Point, &Direction, &m
         let direction = Vec3::new(velocity.0.x, velocity.0.y, 0.);
 	speed.0 += GRAVITY;
         transform.translation += direction.normalize() * speed.0 * time.delta_seconds();
-	println!("{}", transform.translation)
     }
 }
 
@@ -149,14 +147,14 @@ fn point_movement(mut point_query: Query<(&mut Transform, &Point, &Direction, &m
 fn startup_sequence(mut commands: Commands) {
     commands.spawn(Camera2dBundle::default());
 
-    let square = vec![
-        Vec2::new(-200., 0.),
-        Vec2::new(-100., 0.),
-        Vec2::new(-100., 100.),
-        Vec2::new(-200., 200.),
-        Vec2::new(-200., 0.),
-        // Vec2::new(0., 0.),
+    let trapezoid = vec![
+        Vec2::new(-200., 20.),
+        Vec2::new(-100., 20.),
+        Vec2::new(-100., 120.),
+        Vec2::new(-200., 220.),
+        Vec2::new(-200., 20.),
     ];
+
     let car = vec![
         Vec2::new(0., 0.),
         Vec2::new(200., 0.),
@@ -172,8 +170,8 @@ fn startup_sequence(mut commands: Commands) {
     let points = MassPointGroup::new_group(&car);
     let paths = MassPointGroup::draw_paths(&car);
 
-    let square_points = MassPointGroup::new_group(&square);
-    let square_lines  = MassPointGroup::draw_paths(&square);
+    let square_points = MassPointGroup::new_group(&trapezoid);
+    let square_lines  = MassPointGroup::draw_paths(&trapezoid);
 
     commands.spawn((
         paths,

@@ -1,5 +1,7 @@
-* TODO Link group of points with a path somehow (I an thinking like a key in databases)
-** Points are linked but only for one object
+* DONE Link group of points with a path somehow (I an thinking like a key in databases)
+CLOSED: [2023-04-04 Tue 20:23]
+** DONE Points are linked but only for one object
+CLOSED: [2023-04-04 Tue 20:23]
 * DONE link points together with lines
-* Gravity applied to all points
+* TODO Implement collisons
 
