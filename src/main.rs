@@ -58,13 +58,24 @@ struct Spring {
     // Dampang Factor
 }
 #[derive(Component)]
-struct BoundingBox {
-    bounding_square: Vec<Vec2>,
+struct Square{
+    points: Vec<Vec2>,
+    
 }
 
-impl Default for BoundingBox {
+// We have a BoundingBox that has its own shape
+// position
+// And stroke color
+#[derive(Bundle)]
+struct BoundingBoxBundle {
+    bounding_square: Square,
+    stroke: Stroke,
+    // shape: ShapeBundle,
+}
+
+impl Default for Square {
     fn default() -> Self {
-	BoundingBox { bounding_square: vec![
+	Square { points: vec![
 	    Vec2::new(0., 0.),
 	    Vec2::new(0., 1.),
 	    Vec2::new(1., 1.),
@@ -160,26 +171,6 @@ fn minimum_bounding_box(
 
 // Bounding Box needs to be calculated every frame for all non moving entitys
 
-fn update_bounding_box(
-    point_query: Query<&Transform, With<Point>>,
-    mut group_query: Query<(&mut Path, &mut BoundingBox, &Children), With<Group>>,
-    time: Res<Time>
-)
-{
-    // Bounding Box Sudo Code
-    for (mut path, mut bounding_box, children) in group_query.iter_mut() {
-	let mut path_builder = PathBuilder::new();
-	let mut new_points: Vec<Vec2> = Vec::new();
-	for &child  in children.iter() {
-	    let point = point_query.get(child);
-	    if let Ok(transform) = point {
-		path_builder.line_to(transform.translation.truncate());
-	    }
-	}
-	path_builder.close();
-	*path = path_builder.build();
-    }
-}
 
 fn line_movement(
     point_query: Query<&Transform, With<Point>>,
@@ -248,14 +239,15 @@ fn startup_sequence(mut commands: Commands) {
 		     }
     });
 
+    // Parent is the lines, child is the bounding box, and children are all the points
     commands.spawn((
         square_lines,
         Stroke::new(Color::WHITE, 4.0),
 	Group,
-	BoundingBox::default()
     )).with_children(|parent| {
 		     for point in square_points {
 			 parent.spawn((point, Point));
 		     }
+
     });
 }
